@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>ID 專案 Gantt 排程</title>
 <style>
 :root{--cell-w:34px;--row-h:28px;--bg:#f5f6fa;--surface:#fff;--border:#d9dde6;--border-light:#e8eaed;--border-strong:#94a3b8;--text:#1a202c;--text-light:#64748b;--primary:#2563eb;--tw-holiday-bg:#fce7f3;--tw-holiday-fg:#be185d;--cn-holiday-bg:#fef3c7;--cn-holiday-fg:#b45309;--weekend-bg:#f1f5f9;--year-bg:#111827;--year-fg:#fff;--month-bg:#374151;--month-fg:#fff;--cp:#dc2626;--idbar:#6366f1;--idbar-light:#a5b4fc;--mech:#0891b2;--mech-light:#67e8f5;--finemodel:#059669;--bureview:#dc2626;--cmf:#d97706}
@@ -191,6 +191,56 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 .modal{background:#fff;border-radius:8px;padding:20px;max-width:480px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.3)}
 .modal h3{font-size:15px;margin-bottom:12px}.modal p{font-size:13px;color:var(--text-light);margin-bottom:8px;word-break:break-all}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end}
+
+/* Side panel collapsible */
+.side{transition:width .3s cubic-bezier(.4,.1,.2,1),padding .3s,transform .3s;position:relative}
+.side.collapsed{width:0!important;padding:10px 0;overflow:hidden;border-right:none}
+.side.collapsed > *{opacity:0;pointer-events:none;transition:opacity .15s}
+.side-toggle{position:fixed;top:50%;left:182px;transform:translateY(-50%);z-index:50;width:22px;height:48px;background:var(--primary);color:#fff;border:none;border-radius:0 8px 8px 0;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,.18);transition:left .3s cubic-bezier(.4,.1,.2,1);padding:0;line-height:1}
+.side-toggle:hover{background:#1d4ed8}
+.side.collapsed ~ .side-toggle,.side.collapsed + .gantt-area .side-toggle{left:0}
+body.side-collapsed .side-toggle{left:0}
+
+/* Mobile responsive - 手機直式介面 */
+@media (max-width: 768px){
+  :root{--cell-w:24px;--row-h:24px}
+  html,body{font-size:11px}
+  .app{flex-direction:column}
+  .side{position:fixed;top:0;left:0;height:100vh;z-index:60;width:200px;transform:translateX(-100%);box-shadow:4px 0 16px rgba(0,0,0,.2);transition:transform .3s cubic-bezier(.4,.1,.2,1)}
+  .side.mobile-open{transform:translateX(0)}
+  .side.collapsed{transform:translateX(-100%);width:200px!important;padding:10px;border-right:1px solid var(--border)}
+  .side.collapsed > *{opacity:1;pointer-events:auto}
+  .side-toggle{left:0;top:8px;transform:none;width:36px;height:36px;border-radius:0 8px 8px 0;font-size:18px}
+  .side.mobile-open ~ .side-toggle,body.mobile-side-open .side-toggle{left:200px}
+  .gantt-area{width:100vw;flex:1;min-height:0}
+  .zoom-toolbar{padding:4px 8px;font-size:10px;flex-wrap:wrap;gap:6px;padding-left:46px}
+  .zoom-toolbar input[type=range]{flex:1;min-width:100px;max-width:none}
+  .zoom-toolbar .zoom-pct{width:36px;font-size:10px}
+  .zoom-toolbar > span:last-child{display:none}
+  .row-label{width:120px;font-size:10px;padding:0 2px}
+  .row-label .round-wrap{width:28px;height:12px}
+  .row-label .round-wrap .round-btn{font-size:9px}
+  .row-label .round-wrap .round-val{font-size:8px;line-height:12px}
+  .right-edge{width:24px}
+  .right-panel{width:90vw;right:-95vw}
+  .cp-marker{width:28px;height:28px;font-size:11px}
+  .bu-star{width:26px;height:26px;font-size:14px}
+  .side h1{font-size:13px}
+  .side label{font-size:10px}
+  .side input[type="text"],.side input[type="date"],.side input[type="number"]{font-size:12px;padding:5px 7px}
+  .btn{padding:6px 8px;font-size:11px}
+  .ctx-menu{font-size:13px}
+  .modal{padding:14px;width:95%}
+  /* Backdrop for open side panel */
+  body.mobile-side-open::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55;pointer-events:auto}
+}
+
+/* Portrait mode - 直式手機 */
+@media (max-width: 768px) and (orientation: portrait){
+  .right-panel{width:100vw;right:-100vw;height:70vh;top:auto;bottom:-75vh;transition:bottom .3s cubic-bezier(.4,.1,.2,1)}
+  .right-panel.open{right:0;bottom:0}
+  .right-edge{width:100vw;height:18px;top:auto;bottom:0;right:0;background:linear-gradient(to top,rgba(99,102,241,.3),transparent)}
+}
 </style>
 </head>
 <body>
@@ -231,6 +281,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
     </div>
     <div class="gantt-wrap" id="gantt-wrap"><div class="gantt" id="gantt"></div></div>
   </main>
+  <button class="side-toggle" id="side-toggle" title="收折/展開左側面板" aria-label="Toggle side panel">◀</button>
   <div class="right-edge" id="right-edge"></div>
   <aside class="right-panel" id="right-panel">
     <div class="right-head"><button class="pin-btn" id="pin-btn" title="釘住">📌 釘住</button></div>
@@ -1197,6 +1248,63 @@ function exportExcel(){
   h+='</table></body></html>';
   const blob=new Blob([h],{type:'application/vnd.ms-excel;charset=utf-8'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=state.projectName+'_Gantt_'+fmt(new Date())+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(u),1e3);
 }
+
+// Side panel collapse/expand toggle
+(function(){
+  const sideEl=document.querySelector('.side');
+  const tglBtn=document.getElementById('side-toggle');
+  if(!sideEl||!tglBtn)return;
+  const isMobile=()=>window.matchMedia('(max-width: 768px)').matches;
+  const savedCollapsed=localStorage.getItem('sideCollapsed')==='1';
+  function setBtnArrow(){
+    if(isMobile()){
+      tglBtn.textContent=sideEl.classList.contains('mobile-open')?'◀':'☰';
+    }else{
+      tglBtn.textContent=sideEl.classList.contains('collapsed')?'▶':'◀';
+    }
+  }
+  function applyState(){
+    if(isMobile()){
+      sideEl.classList.remove('collapsed');
+      document.body.classList.toggle('mobile-side-open',sideEl.classList.contains('mobile-open'));
+      tglBtn.style.left='';
+    }else{
+      sideEl.classList.remove('mobile-open');
+      document.body.classList.remove('mobile-side-open');
+      sideEl.classList.toggle('collapsed',savedCollapsed);
+      document.body.classList.toggle('side-collapsed',savedCollapsed);
+      tglBtn.style.left=savedCollapsed?'0':'182px';
+    }
+    setBtnArrow();
+  }
+  tglBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(isMobile()){
+      const open=!sideEl.classList.contains('mobile-open');
+      sideEl.classList.toggle('mobile-open',open);
+      document.body.classList.toggle('mobile-side-open',open);
+    }else{
+      const c=!sideEl.classList.contains('collapsed');
+      sideEl.classList.toggle('collapsed',c);
+      document.body.classList.toggle('side-collapsed',c);
+      localStorage.setItem('sideCollapsed',c?'1':'0');
+      tglBtn.style.left=c?'0':'182px';
+    }
+    setBtnArrow();
+  });
+  // Tap outside to close on mobile
+  document.addEventListener('click',e=>{
+    if(!isMobile())return;
+    if(!sideEl.classList.contains('mobile-open'))return;
+    if(sideEl.contains(e.target)||tglBtn.contains(e.target))return;
+    sideEl.classList.remove('mobile-open');
+    document.body.classList.remove('mobile-side-open');
+    setBtnArrow();
+  });
+  window.addEventListener('resize',applyState);
+  window.addEventListener('orientationchange',applyState);
+  applyState();
+})();
 
 init();
 </script>
