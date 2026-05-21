@@ -7,6 +7,7 @@
 <style>
 :root{--cell-w:34px;--row-h:28px;--bg:#f5f6fa;--surface:#fff;--border:#d9dde6;--border-light:#e8eaed;--border-strong:#94a3b8;--text:#1a202c;--text-light:#64748b;--primary:#2563eb;--tw-holiday-bg:#fce7f3;--tw-holiday-fg:#be185d;--cn-holiday-bg:#fef3c7;--cn-holiday-fg:#b45309;--weekend-bg:#f1f5f9;--year-bg:#111827;--year-fg:#fff;--month-bg:#374151;--month-fg:#fff;--cp:#dc2626;--idbar:#6366f1;--idbar-light:#a5b4fc;--mech:#0891b2;--mech-light:#67e8f5;--finemodel:#059669;--bureview:#dc2626;--cmf:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;font-size:13px;color:var(--text);background:var(--bg);overflow:hidden}
 .app{display:flex;height:100vh;width:100vw;overflow:hidden;position:relative}
 
@@ -15,9 +16,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 .side.collapsed{width:0;padding:0;border-right-width:0;overflow:hidden}
 
 /* Side collapse toggle (vertically draggable) */
-.side-toggle{position:absolute;left:172px;top:90px;width:16px;height:44px;background:#fff;border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:11px;color:var(--text-light);font-weight:700;box-shadow:2px 1px 6px rgba(0,0,0,.08);user-select:none;padding:0;transition:background .15s,color .15s,left .25s ease}
+.side-toggle{position:fixed;left:172px;top:90px;width:18px;height:48px;background:#fff;border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;display:flex;align-items:center;justify-content:center;cursor:grab;z-index:50;font-size:12px;color:var(--text-light);font-weight:700;box-shadow:2px 1px 6px rgba(0,0,0,.08);user-select:none;padding:0;touch-action:none;transition:background .15s,color .15s,left .25s ease}
 .side-toggle:hover{background:var(--primary);color:#fff}
-.side-toggle.dragging{cursor:grabbing;background:#eef2ff;color:var(--primary);transition:background .15s,color .15s}
+.side-toggle:active,.side-toggle.dragging{cursor:grabbing;background:#eef2ff;color:var(--primary);transition:background .15s,color .15s}
 .app.side-collapsed .side-toggle{left:0}
 .side h1{font-size:14px;font-weight:700;margin-bottom:4px}
 .side label{display:block;font-size:11px;color:var(--text-light);margin-bottom:3px;font-weight:600;letter-spacing:.3px}
@@ -39,9 +40,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 .zoom-toolbar{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:6px 14px;background:#f8fafc;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-light);font-weight:600}
 .zoom-toolbar input[type=range]{flex:0 0 220px;cursor:pointer}
 .zoom-toolbar .zoom-pct{display:inline-block;width:42px;text-align:right;color:var(--primary);font-weight:700}
-.gantt-row{display:flex;align-items:stretch;position:relative;height:var(--row-h);border-bottom:1px solid var(--border)}
+.gantt-row{display:flex;align-items:stretch;position:relative;height:var(--row-h);border-bottom:1px solid var(--border);width:max-content;min-width:100%}
 .gantt-row.thick-border{border-bottom:2px solid var(--border-strong)}
-.row-label{position:sticky;left:0;z-index:30;display:flex;align-items:center;justify-content:flex-start;flex:0 0 170px;height:100%;padding:0 4px;background:var(--surface);border-right:2px solid #475569;box-shadow:2px 0 6px rgba(0,0,0,.08);font-size:11px;font-weight:600;color:var(--text);gap:2px;user-select:none}
+.row-label{position:sticky;left:0;z-index:30;display:flex;align-items:center;justify-content:flex-start;flex:0 0 170px;width:170px;min-width:170px;max-width:170px;height:100%;padding:0 4px;background:var(--surface);border-right:2px solid #475569;box-shadow:2px 0 6px rgba(0,0,0,.08);font-size:11px;font-weight:600;color:var(--text);gap:2px;user-select:none}
 .row-label .label-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text}
 .row-label .label-text:hover{background:#eef2ff;border-radius:3px}
 .inline-rename{flex:1;height:18px;font-size:11px;font-weight:600;padding:0 4px;border:1px solid var(--primary);border-radius:3px;background:#fff;color:var(--text);outline:none;min-width:60px}
@@ -49,7 +50,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 .row-label .round-wrap .round-btn{flex:0 0 20%;height:100%;border:none;background:#f1f5f9;color:#475569;font-size:11px;font-weight:800;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center}
 .row-label .round-wrap .round-btn:hover{background:var(--primary);color:#fff}
 .row-label .round-wrap .round-val{flex:0 0 60%;text-align:center;font-size:9px;font-weight:700;color:var(--text);line-height:14px;background:#fff}
-.row-content{display:block;flex:0 0 auto;height:100%;position:relative}
+.row-content{display:block;flex:0 0 auto;flex-shrink:0;height:100%;position:relative}
 
 .date-cell,.wday-cell{border-right:1px solid var(--border-light);border-left:1px solid var(--border-light)}
 /* Freeze entire header block at top */
@@ -316,33 +317,32 @@ function setupSideToggle(){
   apply();
   // Default-collapse on small screens
   if(window.matchMedia('(max-width:640px)').matches){collapsed=true;apply()}
-  function beginDrag(startY){
-    const startTop=parseFloat(btn.style.top)||parseFloat(getComputedStyle(btn).top)||90;
-    let dragged=false;
-    return{
-      move(y,prevent){
-        const dy=y-startY;
-        if(!dragged&&Math.abs(dy)>4){dragged=true;btn.classList.add('dragging')}
-        if(dragged){prevent&&prevent();const nt=Math.max(4,Math.min(window.innerHeight-48,startTop+dy));btn.style.top=nt+'px'}
-      },
-      end(){btn.classList.remove('dragging');if(!dragged){collapsed=!collapsed;apply()}}
-    };
-  }
-  btn.addEventListener('mousedown',e=>{
+  btn.addEventListener('pointerdown',e=>{
     e.preventDefault();
-    const d=beginDrag(e.clientY);
-    const onMove=ev=>d.move(ev.clientY);
-    const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);d.end()};
-    document.addEventListener('mousemove',onMove);
-    document.addEventListener('mouseup',onUp);
+    try{btn.setPointerCapture(e.pointerId)}catch(_){}
+    const startY=e.clientY;
+    const startTop=btn.getBoundingClientRect().top;
+    let dragged=false;
+    const onMove=ev=>{
+      const dy=ev.clientY-startY;
+      if(!dragged&&Math.abs(dy)>3){dragged=true;btn.classList.add('dragging')}
+      if(dragged){
+        const nt=Math.max(4,Math.min(window.innerHeight-52,startTop+dy));
+        btn.style.top=nt+'px';
+      }
+    };
+    const onEnd=()=>{
+      btn.removeEventListener('pointermove',onMove);
+      btn.removeEventListener('pointerup',onEnd);
+      btn.removeEventListener('pointercancel',onEnd);
+      try{btn.releasePointerCapture(e.pointerId)}catch(_){}
+      btn.classList.remove('dragging');
+      if(!dragged){collapsed=!collapsed;apply()}
+    };
+    btn.addEventListener('pointermove',onMove);
+    btn.addEventListener('pointerup',onEnd);
+    btn.addEventListener('pointercancel',onEnd);
   });
-  btn.addEventListener('touchstart',e=>{
-    const t=e.touches[0];const d=beginDrag(t.clientY);
-    const onMove=ev=>d.move(ev.touches[0].clientY,()=>ev.preventDefault());
-    const onEnd=()=>{document.removeEventListener('touchmove',onMove);document.removeEventListener('touchend',onEnd);d.end()};
-    document.addEventListener('touchmove',onMove,{passive:false});
-    document.addEventListener('touchend',onEnd);
-  },{passive:true});
 }
 function renderHolidayList(){
   const c=$('hol-list');c.innerHTML='';
