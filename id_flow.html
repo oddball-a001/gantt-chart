@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ID 專案管理流程</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-secondary: #64748b;
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --gate1: #7c3aed;
+    --gate2: #0891b2;
+    --gate3: #059669;
+    --gate4: #d97706;
+    --risk: #dc2626;
+    --risk-bg: #fef2f2;
+    --goal-bg: #f0fdf4;
+    --task-bg: #f8fafc;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.1);
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* === HEADER === */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: auto;
+  }
+
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+  /* === TABS === */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+  }
+  .tab-btn:hover:not(.active) { background: var(--bg); color: var(--text); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* === TIMELINE === */
+  .timeline-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+  .timeline-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; }
+  .timeline {
+    display: flex;
+    align-items: center;
+    min-width: 700px;
+    gap: 0;
+    position: relative;
+  }
+  .tl-phase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+  .tl-phase::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .tl-phase:last-child::after { display: none; }
+  .tl-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid transparent;
+  }
+  .tl-dot:hover { transform: scale(1.1); box-shadow: var(--shadow-lg); }
+  .tl-dot.phase-sr { background: #e0e7ff; color: #3730a3; }
+  .tl-dot.phase-er { background: #dbeafe; color: #1d4ed8; }
+  .tl-dot.phase-pr { background: #dcfce7; color: #15803d; }
+  .tl-dot.phase-mp { background: #fef9c3; color: #854d0e; }
+  .tl-dot.phase-bu { background: #f3f4f6; color: #374151; }
+  .tl-dot.phase-ko { background: #fce7f3; color: #9d174d; }
+  .tl-name { font-size: 11px; font-weight: 600; margin-top: 6px; color: var(--text-secondary); text-align: center; }
+  .tl-sub { font-size: 10px; color: #94a3b8; text-align: center; }
+
+  /* Gate badges on timeline */
+  .tl-gate {
+    position: absolute;
+    top: -10px;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 2;
+  }
+  .gate-g1 { background: #ede9fe; color: var(--gate1); left: 70%; }
+  .gate-g2 { background: #e0f2fe; color: var(--gate2); left: 60%; }
+  .gate-g3 { background: #dcfce7; color: var(--gate3); left: 40%; }
+  .gate-g4 { background: #fef3c7; color: var(--gate4); left: 20%; }
+
+  /* === 4 GATES GRID === */
+  .gates-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 900px) { .gates-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .gates-grid { grid-template-columns: 1fr; } }
+
+  .gate-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .gate-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .gate-card.g1::before { background: var(--gate1); }
+  .gate-card.g2::before { background: var(--gate2); }
+  .gate-card.g3::before { background: var(--gate3); }
+  .gate-card.g4::before { background: var(--gate4); }
+  .gate-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .gate-card.open { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+
+  .gate-num {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .g1 .gate-num { color: var(--gate1); }
+  .g2 .gate-num { color: var(--gate2); }
+  .g3 .gate-num { color: var(--gate3); }
+  .g4 .gate-num { color: var(--gate4); }
+
+  .gate-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .gate-phase {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .g1 .gate-phase { background: #ede9fe; color: var(--gate1); }
+  .g2 .gate-phase { background: #e0f2fe; color: var(--gate2); }
+  .g3 .gate-phase { background: #dcfce7; color: var(--gate3); }
+  .g4 .gate-phase { background: #fef3c7; color: var(--gate4); }
+
+  .gate-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .gate-arrow { float: right; transition: transform 0.2s; font-size: 16px; color: var(--text-secondary); }
+  .gate-card.open .gate-arrow { transform: rotate(180deg); }
+
+  /* === DETAIL PANEL === */
+  .detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-lg);
+    display: none;
+  }
+  .detail-panel.visible { display: block; animation: slideDown 0.2s ease; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-header-bar { width: 5px; height: 40px; border-radius: 3px; flex-shrink: 0; }
+  .dp-g1 .detail-header-bar { background: var(--gate1); }
+  .dp-g2 .detail-header-bar { background: var(--gate2); }
+  .dp-g3 .detail-header-bar { background: var(--gate3); }
+  .dp-g4 .detail-header-bar { background: var(--gate4); }
+
+  .detail-header-text h2 { font-size: 17px; font-weight: 700; }
+  .detail-header-text p { font-size: 12px; color: var(--text-secondary); }
+
+  .detail-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  @media (max-width: 700px) { .detail-body { grid-template-columns: 1fr; } }
+
+  .detail-section {
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+  }
+  .detail-section:last-child { border-right: none; }
+  .detail-section:nth-child(3), .detail-section:nth-child(4) { border-top: 1px solid var(--border); }
+
+  .detail-section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .goal-box {
+    background: var(--goal-bg);
+    border-left: 3px solid #059669;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  .risk-box {
+    background: var(--risk-bg);
+    border-left: 3px solid var(--risk);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #7f1d1d;
+  }
+
+  .task-list { list-style: none; }
+  .task-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .task-list li:last-child { border-bottom: none; }
+  .task-icon { font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+  .task-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* === LEAD TIME === */
+  .lt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .lt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .lt-icon { font-size: 22px; }
+  .lt-name { font-size: 12px; color: var(--text-secondary); }
+  .lt-value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+  .lt-unit { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+
+  /* === CMF PROCESS === */
+  .flow-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .flow-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .flow-subtitle { font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; }
+  .flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .flow-step {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    min-width: 100px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .flow-step.highlight {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .flow-arrow { color: var(--text-secondary); font-size: 16px; flex-shrink: 0; }
+
+  .spec-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .spec-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spec-label { color: var(--text-secondary); }
+  .spec-value { font-weight: 700; color: var(--text); }
+
+  /* === CP SECTION === */
+  .cp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 700px) { .cp-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .cp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .cp-num { font-size: 22px; font-weight: 900; color: var(--primary); line-height: 1; }
+  .cp-when { font-size: 11px; font-weight: 700; color: var(--text-secondary); margin: 2px 0 6px; text-transform: uppercase; }
+  .cp-desc { font-size: 12px; line-height: 1.5; }
+
+  /* === SOP SECTION === */
+  .sop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 700px) { .sop-grid { grid-template-columns: 1fr; } }
+
+  .sop-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .sop-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .sop-header h3 { font-size: 13px; font-weight: 700; }
+  .sop-header p { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .sop-body { padding: 14px 16px; }
+
+  .standard-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    font-size: 12px;
+  }
+  .standard-row:last-child { border-bottom: none; }
+  .std-label { color: var(--text-secondary); flex: 1; }
+  .std-val { font-weight: 700; }
+  .std-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  /* Timeline section on CMF tab */
+  .material-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+  .material-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .material-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .material-table tr:last-child td { border-bottom: none; }
+  .material-table tr:hover td { background: var(--bg); }
+  .mat-name { font-weight: 600; }
+  .mat-detail { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .mat-tag {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+
+  /* Section heading */
+  .section-heading {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Close button */
+  .close-detail {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+  .close-detail:hover { background: var(--bg); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">ID 專案管理流程</div>
+    <div class="header-sub">CMF 管控系統 · ASUS ID Team</div>
+  </div>
+  <div class="badge">V4.5 · 20260105</div>
+</div>
+
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('flow')">📋 四大 Gate 流程</button>
+    <button class="tab-btn" onclick="switchTab('cmf')">🎨 CMF 工藝管控</button>
+    <button class="tab-btn" onclick="switchTab('leadtime')">⏱ Lead Time</button>
+    <button class="tab-btn" onclick="switchTab('cp')">📍 Check Points</button>
+  </div>
+
+  <!-- ==================== TAB: FLOW ==================== -->
+  <div id="tab-flow" class="tab-content active">
+
+    <!-- Timeline -->
+    <div class="timeline-wrap">
+      <div class="timeline-label">專案開發節點總覽</div>
+      <div class="timeline">
+        <div class="tl-phase">
+          <div class="tl-dot phase-bu">🤝</div>
+          <div class="tl-name">BU Meeting</div>
+          <div class="tl-sub">訪談啟動</div>
+        </div>
+        <div class="tl-phase">
+          <div class="tl-dot phase-ko">🚀</div>
+          <div class="tl-name">ID Kick Off</div>
+          <div class="tl-sub">MKT Spec凍結</div>
+        </div>
+        <div class="tl-phase" style="position:relative">
+          <div class="tl-gate gate-g1">G1 精模前</div>
+          <div class="tl-dot phase-sr">SR</div>
+          <div class="tl-name">SR 階段</div>
+          <div class="tl-sub">Tooling Start</div>
+        </div>
+        <div class="tl-phase" style="position:relative">
+          <div class="tl-gate gate-g2">G2 TS前</div>
+          <div class="tl-dot phase-er">ER</div>
+          <div class="tl-name">ER 階段</div>
+          <div class="tl-sub">T1~T2</div>
+        </div>
+        <div class="tl-phase" style="position:relative">
+          <div class="tl-gate gate-g3">G3 備料前</div>
+          <div class="tl-dot phase-pr">PR</div>
+          <div class="tl-name">PR 階段</div>
+          <div class="tl-sub">T3</div>
+        </div>
+        <div class="tl-phase" style="position:relative">
+          <div class="tl-gate gate-g4">G4 備料前</div>
+          <div class="tl-dot phase-mp">MP</div>
+          <div class="tl-name">MP 量產</div>
+          <div class="tl-sub">TF</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Gates -->
+    <div class="section-heading">點選 Gate 查看細節</div>
+    <div class="gates-grid">
+      <div class="gate-card g1" onclick="toggleGate('g1')">
+        <span class="gate-arrow" id="arrow-g1">▼</span>
+        <div class="gate-num">Gate 1</div>
+        <div class="gate-title">定方向</div>
+        <div class="gate-phase">精模前</div>
+        <div class="gate-desc">CMF 定義完成，廠商調色啟動，確認顏色與工藝大方向</div>
+      </div>
+      <div class="gate-card g2" onclick="toggleGate('g2')">
+        <span class="gate-arrow" id="arrow-g2">▼</span>
+        <div class="gate-num">Gate 2</div>
+        <div class="gate-title">定顏色</div>
+        <div class="gate-phase">Tooling Start 前</div>
+        <div class="gate-desc">新顏色與工藝凍結，此後無法再新增顏色</div>
+      </div>
+      <div class="gate-card g3" onclick="toggleGate('g3')">
+        <span class="gate-arrow" id="arrow-g3">▼</span>
+        <div class="gate-num">Gate 3</div>
+        <div class="gate-title">定標準</div>
+        <div class="gate-phase">ER 備料前</div>
+        <div class="gate-desc">中心色 Golden Sample 簽樣，務必在此節點導入確認</div>
+      </div>
+      <div class="gate-card g4" onclick="toggleGate('g4')">
+        <span class="gate-arrow" id="arrow-g4">▼</span>
+        <div class="gate-num">Gate 4</div>
+        <div class="gate-title">定限度</div>
+        <div class="gate-phase">PR 備料前</div>
+        <div class="gate-desc">外觀限度樣／外觀標準樣完成簽樣，建立量產允收標準</div>
+      </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+      <!-- filled by JS -->
+    </div>
+
+  </div>
+
+  <!-- ==================== TAB: CMF ==================== -->
+  <div id="tab-cmf" class="tab-content">
+
+    <div class="section-heading">純塑膠成型 · 顏色管控流程</div>
+    <div class="flow-wrap">
+      <div class="flow-title">CC ADC 純塑膠成型 顏色限度控管 V2</div>
+      <div class="flow-subtitle">「ID Golden → 塑料廠 Golden → 機構廠射出 → ID 承認外觀色樣 → 量產控管」</div>
+      <div class="flow-steps">
+        <div class="flow-step highlight">ID 提供<br>顏色 Golden</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">ID 承認<br>塑膠顏色板 Golden</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">塑料廠<br>調色</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">ID 承認<br>塑膠色板限度</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">塑料廠<br>正式抽料</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">機構廠<br>調機射出</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step highlight">ID 最終承認<br>外觀顏色光澤成型樣</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">量產控管</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-item">
+          <span class="spec-label">光澤允差</span>
+          <span class="spec-value">N ± 0.5</span>
+          <span class="spec-label">（60° 測量）</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">色差</span>
+          <span class="spec-value">ΔE ≤ 0.5</span>
+          <span class="spec-label">（目標值）</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">允差寬放</span>
+          <span class="spec-value">ΔE ≤ 0.8</span>
+          <span class="spec-label">（三方紀錄）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-heading">咬花效果開發與模具管控流程</div>
+    <div class="flow-wrap">
+      <div class="flow-title">CC ADC 咬花效果開發與模具咬花管控流程 V1</div>
+      <div class="flow-subtitle">「挑選紋理 → 打版 → 提供模具基準 → 比對光澤 → 修正 → 量產」</div>
+      <div class="flow-steps">
+        <div class="flow-step">挑選咬花型號</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">尺度展開打版<br><span style="font-size:10px;color:#64748b">花型深度/比例大小</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step highlight">光澤梯度展開打板<br><span style="font-size:10px">打3階一版，最少5份</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">提供機構廠<br>模具實作標準</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">模具咬花後<br>比對花型&光澤</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">是否修正？<br><span style="font-size:10px;color:#ef4444">確認備用模仁</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step highlight">量產&控管品質</div>
+      </div>
+    </div>
+
+    <div class="sop-grid">
+      <div class="sop-card">
+        <div class="sop-header">
+          <h3>塑膠成型 + 噴漆 · 顏色管控</h3>
+          <p>全製程流程 V0</p>
+        </div>
+        <div class="sop-body">
+          <div class="flow-steps" style="flex-direction:column; align-items:flex-start;">
+            <div style="display:flex; align-items:center; gap:8px; width:100%; padding:5px 0;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#2563eb;flex-shrink:0;"></div>
+              <span style="font-size:12px;">ID 提供顏色 Golden</span>
+            </div>
+            <div style="margin-left:4px; width:1px; height:12px; background:#e2e8f0;"></div>
+            <div style="display:flex; align-items:center; gap:8px; width:100%; padding:5px 0;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0;"></div>
+              <span style="font-size:12px;">ID 承認塑膠色板 Golden</span>
+            </div>
+            <div style="margin-left:4px; width:1px; height:12px; background:#e2e8f0;"></div>
+            <div style="display:flex; align-items:center; gap:8px; width:100%; padding:5px 0;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#0891b2;flex-shrink:0;"></div>
+              <span style="font-size:12px;">ID 承認外觀色樣 Golden（機構廠射出）</span>
+            </div>
+            <div style="margin-left:4px; width:1px; height:12px; background:#e2e8f0;"></div>
+            <div style="display:flex; align-items:center; gap:8px; width:100%; padding:5px 0;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#059669;flex-shrink:0;"></div>
+              <span style="font-size:12px;">ID 承認噴漆色板 Golden（油漆廠調色）</span>
+            </div>
+            <div style="margin-left:4px; width:1px; height:12px; background:#e2e8f0;"></div>
+            <div style="display:flex; align-items:center; gap:8px; width:100%; padding:5px 0;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#d97706;flex-shrink:0;"></div>
+              <span style="font-size:12px;">ID 承認全製程色樣 Golden</span>
+            </div>
+            <div style="margin-left:4px; width:1px; height:12px; background:#e2e8f0;"></div>
+            <div style="display:flex; align-items:center; gap:8px; width:100%; padding:5px 0;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#dc2626;flex-shrink:0;"></div>
+              <span style="font-size:12px;">ID 承認外觀色樣限度範圍</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sop-card">
+        <div class="sop-header">
+          <h3>Color Matching Zone 定義</h3>
+          <p>標準化對色區域規範</p>
+        </div>
+        <div class="sop-body">
+          <div style="background:#fef3c7; border-left:3px solid #d97706; padding:10px 14px; border-radius:0 6px 6px 0; margin-bottom:14px; font-size:12px; line-height:1.6;">
+            <strong>問題背景：</strong>成型工件表面紋理與標準色板的咬花規格及光澤度存在差異，導致光源反射不一致，增加視覺與儀器對色難度。
+          </div>
+          <div class="standard-row">
+            <span class="std-label">位置</span>
+            <span class="std-val">模具公模面（Core Side）</span>
+          </div>
+          <div class="standard-row">
+            <span class="std-label">尺寸</span>
+            <span class="std-val">≥ 20 × 20 mm</span>
+            <span class="std-badge">越大越好</span>
+          </div>
+          <div class="standard-row">
+            <span class="std-label">表面處理</span>
+            <span class="std-val">高度拋光 #Polished</span>
+          </div>
+          <div class="standard-row">
+            <span class="std-label">目的</span>
+            <span class="std-val">建立單一變量的顏色簽樣基準</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== TAB: LEAD TIME ==================== -->
+  <div id="tab-leadtime" class="tab-content">
+
+    <div class="section-heading">CMF 工藝 Lead Time</div>
+    <div class="lt-grid">
+      <div class="lt-card"><div class="lt-icon">🎨</div><div><div class="lt-name">塑膠噴漆（NX/AIO/DT）</div><div><span class="lt-value">5</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">🔩</div><div><div class="lt-name">鋁陽極三金（NX）</div><div><span class="lt-value">5</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">💡</div><div><div class="lt-name">含燈效（ROG/DT）</div><div><span class="lt-value">6~7</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">🌿</div><div><div class="lt-name">特殊咬花機種</div><div><span class="lt-value">7</span><span class="lt-unit"> wks</span></div></div></div>
+    </div>
+
+    <div class="section-heading">模具節點 Lead Time</div>
+    <div class="lt-grid">
+      <div class="lt-card"><div class="lt-icon">📦</div><div><div class="lt-name">SR TS → T1 入料</div><div><span class="lt-value">4.6</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">🔧</div><div><div class="lt-name">T1 備料</div><div><span class="lt-value">2.2</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">🔧</div><div><div class="lt-name">T1 → T2 修模</div><div><span class="lt-value">1.6+1</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">📦</div><div><div class="lt-name">T2 備料</div><div><span class="lt-value">2.4</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">🔧</div><div><div class="lt-name">T3 修模</div><div><span class="lt-value">3.2</span><span class="lt-unit"> wks</span></div></div></div>
+      <div class="lt-card"><div class="lt-icon">📦</div><div><div class="lt-name">TF 備料</div><div><span class="lt-value">3</span><span class="lt-unit"> wks</span></div></div></div>
+    </div>
+
+    <div class="section-heading">各材料調色 Lead Time 詳表</div>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);">
+      <table class="material-table">
+        <thead>
+          <tr>
+            <th>工藝 / 材料</th>
+            <th>調色 LT</th>
+            <th>備料 LT</th>
+            <th>備注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="mat-name">塑料射出調色</div><div class="mat-detail">科思創等大廠</div></td>
+            <td><span class="mat-tag">8 wks</span>大廠<br><span style="font-size:11px;color:#64748b">T0+2wks 為最後凍結時間</span></td>
+            <td>8 wks（大廠）<br>6 wks（小廠）</td>
+            <td>有色號需提供給 ME</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">噴漆調色</div><div class="mat-detail">OEM 複製中心色</div></td>
+            <td>台北漆廠實驗室打樣→ 對色 2.6 wks</td>
+            <td>備油 1 wks→ 試噴 1 wks</td>
+            <td>Rubber Painting 需 4 wks；含噴塗 CR 驗證</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">鋁陽極調色</div></td>
+            <td>大件中心色（小片色板）→ 小件中心色（工件）</td>
+            <td>小件調色工件備料 1 wks</td>
+            <td>九宮格限度完成（工件）2~3 wks</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">IMR（KURZ）</div></td>
+            <td>Baby Printing 準備 2 wks</td>
+            <td>板輪開版 3 wks + 備貨 3 wks + 寄送 1 wks</td>
+            <td>設計連續圖→確認→Baby Printing 微調</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">IMR（森田）</div></td>
+            <td>Baby Printing 準備 1 wks</td>
+            <td>備貨 5 wks + 寄送 1 wks</td>
+            <td>板輪開版 1 wks</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">Touch Pad（新開）</div></td>
+            <td>ID中心色簽樣 10 wks</td>
+            <td>SR 新開 12 wks<br>ER/PR 備料 8 wks</td>
+            <td>SMT 1wks + 組裝 1wks + 測試 1wks</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">Finger Print（新開）</div></td>
+            <td>ID中心色簽樣 10 wks</td>
+            <td>SR 新開 11 wks<br>ER/PR 備料 7 wks</td>
+            <td>ID調限度樣 7 wks</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">Keyboard（新開）</div></td>
+            <td>ID調色打樣 LT 4 wks × 2 輪</td>
+            <td>SR 新開 12 wks<br>開模 5 wks + 生產 5 wks</td>
+            <td>包含 FPC / 鍵帽叫漆噴漆</td>
+          </tr>
+          <tr>
+            <td><div class="mat-name">咬花（模具咬花）</div></td>
+            <td>光澤梯度打板 2 wks（含運送）</td>
+            <td>模具咬花 + 試模 1st：10 days + 1 day</td>
+            <td>特殊咬花需備用模仁；修模天數需確認</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ==================== TAB: CHECK POINTS ==================== -->
+  <div id="tab-cp" class="tab-content">
+
+    <div class="section-heading">ID 專案 Check Points（CP1 ~ CP4）</div>
+    <div class="cp-grid">
+      <div class="cp-card">
+        <div class="cp-num">CP1</div>
+        <div class="cp-when">精模前</div>
+        <div class="cp-desc">工藝與顏色大方向決定。CMF 未確認的填寫 TBD，色彩計畫提供廠商調色。</div>
+      </div>
+      <div class="cp-card">
+        <div class="cp-num">CP2</div>
+        <div class="cp-when">約第 30 週</div>
+        <div class="cp-desc">Hero 色與新增色最終決定。再晚，ER 將沒有正式中心色。Key Part 顏色需看過 1~2 次。</div>
+      </div>
+      <div class="cp-card">
+        <div class="cp-num">CP3</div>
+        <div class="cp-when">T2 備料前（約第 43 週）</div>
+        <div class="cp-desc">正式材料到位，顏色配方確認（塑料打版／油漆入料）。含整機狀態確認。</div>
+      </div>
+      <div class="cp-card">
+        <div class="cp-num">CP4</div>
+        <div class="cp-when">T3 備料前（約第 51 週）</div>
+        <div class="cp-desc">顏色限度範圍確認（九宮格／噴漆色／咬花標準板）。Key Part Final 顏色限度完成。</div>
+      </div>
+    </div>
+
+    <div class="section-heading">預警時間點（從各節點倒推）</div>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);">
+      <table class="material-table">
+        <thead>
+          <tr>
+            <th>Check Point</th>
+            <th>預警時間</th>
+            <th>ID 主管確認重點</th>
+            <th>若未達成之風險</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="mat-tag">CP1</span> 精模前</td>
+            <td>− 10 wks 預警</td>
+            <td>CMF 定義完成與調色啟動</td>
+            <td>後續調整成本與風險將提高</td>
+          </tr>
+          <tr>
+            <td><span class="mat-tag">CP2</span> 顏色凍結</td>
+            <td>− 7~8 wks 預警</td>
+            <td>新顏色與工藝需凍結，調色啟動最後防線</td>
+            <td>補救難度更高，新增顏色要討論延期</td>
+          </tr>
+          <tr>
+            <td><span class="mat-tag">CP3</span> ER 備料前</td>
+            <td>− 8 wks 預警</td>
+            <td>中心色（ID Golden Sample）簽樣，務必導入</td>
+            <td>無法建立檢驗標準，量產良率無據可循</td>
+          </tr>
+          <tr>
+            <td><span class="mat-tag">CP4</span> PR 備料前</td>
+            <td>− 3~4 wks 預警</td>
+            <td>外觀限度樣／外觀標準樣簽樣完畢</td>
+            <td style="color:#dc2626;font-weight:600;">首批將有大批 Risk 樣品出貨</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:20px;" class="section-heading">設計開發時程（依機種）</div>
+    <div class="sop-grid">
+      <div class="sop-card">
+        <div class="sop-header"><h3>📱 手機 Phone</h3><p>ID Kick Off 往前推 19.5 wks</p></div>
+        <div class="sop-body">
+          <div class="standard-row"><span class="std-label">草模 + 精模</span><span class="std-val">3 + 8 wks</span><span style="font-size:11px;color:#64748b">（不含 review）</span></div>
+          <div class="standard-row"><span class="std-label">CR + VD（成熟工藝）</span><span class="std-val">9 wks</span></div>
+          <div class="standard-row"><span class="std-label">新工藝開發（精模使用）</span><span class="std-val">同步進行</span></div>
+          <div class="standard-row"><span class="std-label">設計提案</span><span class="std-val">每 3 天檢討一次</span></div>
+          <div class="standard-row"><span class="std-label">3D 繪製</span><span class="std-val">每 4 天修正一次</span></div>
+        </div>
+      </div>
+      <div class="sop-card">
+        <div class="sop-header"><h3>💻 筆電 NB</h3><p>ID Kick Off 往前推 18 wks</p></div>
+        <div class="sop-body">
+          <div class="standard-row"><span class="std-label">ID Design</span><span class="std-val">8 wks</span></div>
+          <div class="standard-row"><span class="std-label">精模</span><span class="std-val">9 wks（含設變兩輪）</span></div>
+          <div class="standard-row"><span class="std-label">3D 建圖 + 草模驗證</span><span class="std-val">兩輪</span></div>
+          <div class="standard-row"><span class="std-label">設計提案</span><span class="std-val">每 3 天檢討一次</span></div>
+          <div class="standard-row"><span class="std-label">長結構 + DFM</span><span class="std-val">IDME 共同執行</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// Gate detail data
+const gateData = {
+  g1: {
+    cls: 'dp-g1',
+    num: 'Gate 1',
+    title: '定方向',
+    phase: '精模前',
+    goal: 'CMF 定義完成，啟動對應工藝廠商調色。確認顏色大方向，啟動所有相關廠商的調色資源。',
+    tasks: [
+      { icon: '✅', text: 'CMF 定義完成（顏色未定可寫 TBD）', sub: '提供咬花樣式供 Tooling Study；色彩計畫提案完成（新色）' },
+      { icon: '✅', text: 'ID 準備好標準色板（15 pcs）' },
+      { icon: '✅', text: '廠商調色啟動（提供標準色板）', sub: '塑膠粒子廠調色啟動；預約 T1 前現場調色資源（ex: 科思創）' },
+      { icon: '✅', text: 'Key Part 啟動 ft SID Team / PM', sub: '提供 ID 外觀提案 3D cc ME；提供標準色板；請 SID PM 提供調色計畫' },
+    ],
+    risk: '若未完成色彩計畫及提供廠商方向，後續調整成本與風險將提高。'
+  },
+  g2: {
+    cls: 'dp-g2',
+    num: 'Gate 2',
+    title: '定顏色',
+    phase: 'Tooling Start 前',
+    goal: '新顏色與工藝凍結。這是顏色變更的最後機會，新色需求通常為業務/客戶新增。',
+    tasks: [
+      { icon: '✅', text: 'CMF 定案並提交文件', sub: '咬花樣式定案（光澤梯度&尺寸）；色彩計畫凍結底線；特殊工藝依專案狀況討論' },
+      { icon: '✅', text: '廠商調色啟動底線（提供標準色板）', sub: '啟動塑膠粒子廠現場調色（T0+2wks 最後調色時間）；陽極工藝調色啟動；噴漆工藝調色啟動' },
+      { icon: '✅', text: 'Key Part 啟動 ft SID Team / PM', sub: '顏色提案鎖定（不能再新增顏色）；TS 前建議有三次調色樣品討論' },
+      { icon: '⚠️', text: '塑料粒子有色號需提供給 ME' },
+    ],
+    risk: '後面補救難度更高（人力/廠商資源）。新增顏色要討論延期。後續人力與廠商資源補救困難。'
+  },
+  g3: {
+    cls: 'dp-g3',
+    num: 'Gate 3',
+    title: '定標準',
+    phase: 'ER 備料前',
+    goal: '中心色（ID Golden Sample）簽樣。此階段務必導入確認，建立後續檢驗基準。',
+    tasks: [
+      { icon: '✅', text: '中心色鎖定', sub: '咬花樣式定案，進行正確塑料顏色射出（標準版製作）；所有工藝完成中心色調色並投料' },
+      { icon: '✅', text: 'ID 出差確認首件（現場承認標準樣）', sub: '特殊工藝依個案討論' },
+      { icon: '✅', text: '廠商調色資源預約（啟動限度製作的資源協商）', sub: '陽極工藝調色啟動；噴漆工藝調色啟動（產線預約&試產 Run 2）' },
+      { icon: '✅', text: 'Key Part 中心色鎖定 ft SID Team / PM', sub: 'ER 備料前完成限度簽樣；需於 ER 整機前，請 SID 提供物料供 ID 組立匹配' },
+    ],
+    risk: '若拖到 PR 階段，將無法建立檢驗標準（無法估出良率），導致量產判定/單價無據可循。'
+  },
+  g4: {
+    cls: 'dp-g4',
+    num: 'Gate 4',
+    title: '定限度',
+    phase: 'PR 備料前',
+    goal: '外觀限度樣／外觀標準樣完成（色差、瑕疵允收範圍）。建立量產判定依據。',
+    tasks: [
+      { icon: '✅', text: '外觀限度樣 — ID 完成所有工藝限度簽樣（咬花工件除外）' },
+      { icon: '✅', text: '咬花工件品質確認', sub: '看是否啟動備用母模；需確認模具品質才允上機；MP 前完成咬花標準工件簽樣' },
+      { icon: '✅', text: 'Key Part Final ft SID Team / PM', sub: '需於 PR 整機前，將限度物料與其他工件匹配顏色' },
+      { icon: '⚠️', text: '咬花產品 MP 才有機會簽外觀標準樣（特殊注意）' },
+    ],
+    risk: '未完成簽樣，首批將有大批 Risk 樣品出貨。'
+  }
+};
+
+let currentGate = null;
+
+function toggleGate(id) {
+  const panel = document.getElementById('detail-panel');
+  const card = document.querySelector(`.gate-card.${id}`);
+
+  if (currentGate === id) {
+    // close
+    panel.classList.remove('visible');
+    card.classList.remove('open');
+    document.getElementById('arrow-' + id).textContent = '▼';
+    currentGate = null;
+    return;
+  }
+
+  // close previous
+  if (currentGate) {
+    document.querySelector(`.gate-card.${currentGate}`)?.classList.remove('open');
+    document.getElementById('arrow-' + currentGate).textContent = '▼';
+  }
+
+  currentGate = id;
+  card.classList.add('open');
+  document.getElementById('arrow-' + id).textContent = '▲';
+
+  const d = gateData[id];
+  panel.className = `detail-panel visible ${d.cls}`;
+  panel.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-header-bar"></div>
+      <div class="detail-header-text">
+        <h2>${d.num}「${d.title}」— ${d.phase}</h2>
+        <p>點擊任何 Gate 卡片可切換查看</p>
+      </div>
+      <button class="close-detail" onclick="closeDetail()">✕ 關閉</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3>🎯 目標</h3>
+        <div class="goal-box">${d.goal}</div>
+      </div>
+      <div class="detail-section" style="border-right:none;">
+        <h3>⚠️ 若未達成的風險</h3>
+        <div class="risk-box">${d.risk}</div>
+      </div>
+      <div class="detail-section" style="grid-column: 1 / -1; border-right:none; border-top: 1px solid var(--border);">
+        <h3>📋 工作任務</h3>
+        <ul class="task-list">
+          ${d.tasks.map(t => `<li><span class="task-icon">${t.icon}</span><div>${t.text}${t.sub ? `<span class="task-sub">${t.sub}</span>` : ''}</div></li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDetail() {
+  const panel = document.getElementById('detail-panel');
+  panel.classList.remove('visible');
+  if (currentGate) {
+    document.querySelector(`.gate-card.${currentGate}`)?.classList.remove('open');
+    document.getElementById('arrow-' + currentGate).textContent = '▼';
+    currentGate = null;
+  }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
