@@ -7,8 +7,8 @@
 | 方式 | 連結 |
 |------|------|
 | **在線預覽** | [GitHub Pages Live Demo](https://oddball-a001.github.io/gantt-chart/) |
-| **直接打開** | [Raw HTML Preview](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oddball-a001/gantt-chart/main/gantt.html) |
-| **本地打開** | 下載 `gantt.html` 後在瀏覽器中打開 |
+| **直接打開** | [Raw HTML Preview](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oddball-a001/gantt-chart/main/index.html) |
+| **本地打開** | 下載 `index.html` 後在瀏覽器中打開 |
 
 > **啟用 GitHub Pages：**  
 > 1. 進入倉庫 **Settings** → **Pages**  
@@ -67,7 +67,7 @@
 ## 🚀 快速開始
 
 ### 使用方法
-1. 在瀏覽器中打開 `gantt.html`
+1. 在瀏覽器中打開 `index.html`
 2. 左側面板調整參數和設定
 3. 中央區域查看和交互甘特圖
 4. 右側浮窗顯示詳細資訊
@@ -101,7 +101,8 @@
 ```
 gantt-chart/
 ├── README.md           # 此文件
-├── gantt.html          # 主應用（~1200 行）
+├── index.html          # 主應用（~1200 行）
+├── id_flow.html        # ID 流程圖
 └── .git/              # Git 版本控制
 ```
 
