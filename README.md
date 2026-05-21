@@ -2,6 +2,21 @@
 
 一個功能豐富的互動式 HTML5 甘特圖應用，專為 ASUS ID 專案時程管理設計。
 
+## 🌐 快速訪問
+
+| 方式 | 連結 |
+|------|------|
+| **在線預覽** | [GitHub Pages Live Demo](https://oddball-a001.github.io/gantt-chart/) |
+| **直接打開** | [Raw HTML Preview](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oddball-a001/gantt-chart/main/gantt.html) |
+| **本地打開** | 下載 `gantt.html` 後在瀏覽器中打開 |
+
+> **啟用 GitHub Pages：**  
+> 1. 進入倉庫 **Settings** → **Pages**  
+> 2. 選擇 **main branch** 作為來源  
+> 3. 完成後就能通過 GitHub Pages URL 訪問應用
+
+---
+
 ## 🎯 功能特性
 
 ### 核心甘特圖功能
